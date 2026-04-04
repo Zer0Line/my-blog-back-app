@@ -1,8 +1,15 @@
 package com.training.blog.controller;
 
+import com.training.blog.model.Post;
+import com.training.blog.dto.PostResponse;
 import com.training.blog.dto.PostsPageResponse;
+import com.training.blog.dto.UpdatePostRequest;
 import com.training.blog.service.PostService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -15,6 +22,21 @@ public class PostsController {
         this.postService = postService;
     }
 
+    @PostMapping("/api/posts")
+    public PostResponse createPost(@RequestBody Post request) {
+        return postService.create(request);
+    }
+
+    @PutMapping("/api/posts/{id}")
+    public PostResponse updatePost(@PathVariable("id") Long id, @RequestBody UpdatePostRequest request) {
+        return postService.update(id, request.title(), request.text(), request.tags());
+    }
+
+    @GetMapping("/api/posts/{id}")
+    public PostResponse getPost(@PathVariable("id") Long id) {
+        return postService.getById(id);
+    }
+
     @GetMapping("/api/posts")
     public PostsPageResponse getPosts(
             @RequestParam(name = "search", defaultValue = "") String search,
@@ -23,4 +45,5 @@ public class PostsController {
     ) {
         return postService.getPosts(search, pageNumber, pageSize);
     }
+
 }

@@ -16,14 +16,20 @@ repositories {
     mavenCentral()
 }
 
+def props = new Properties()
+file("src/main/resources/application.properties").withInputStream {
+    props.load(it)
+}
+def tomcatHome = props.getProperty('tomcat.homepath')
+
 ext {
     springVersion = '6.2.4'
     jakartaVersion = '6.0.0'
     lombokVersion = '1.18.30'
-    tomcatHome = '/opt/tomcat'
     tomcatName = 'ROOT'
     appName = project.name
 }
+
 
 dependencies {
     // Spring Web MVC

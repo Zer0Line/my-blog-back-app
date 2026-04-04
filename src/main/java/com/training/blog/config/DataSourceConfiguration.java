@@ -50,7 +50,7 @@ public class DataSourceConfiguration {
 
         ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
         populator.addScript(new ClassPathResource("schema.sql"));
-        populator.addScript(new ClassPathResource("data.sql"));
+        //populator.addScript(new ClassPathResource("data.sql"));
         populator.execute(dataSource);
     }
 
