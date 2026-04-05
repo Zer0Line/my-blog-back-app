@@ -64,10 +64,15 @@ public class CommentRepository {
         return findById(id);
     }
 
-    public void delete(Long id) {
-        String sql = "DELETE FROM comments WHERE id = ?";
-        jdbcTemplate.update(sql, id);
-    }
+public void delete(Long id) {
+ String sql = "DELETE FROM comments WHERE id = ?";
+ jdbcTemplate.update(sql, id);
+ }
+
+ public void deleteByPostId(Long postId) {
+ String sql = "DELETE FROM comments WHERE post_id = ?";
+ jdbcTemplate.update(sql, postId);
+ }
 
     public Comment findById(Long id) {
         String sql = "SELECT * FROM comments WHERE id = ?";

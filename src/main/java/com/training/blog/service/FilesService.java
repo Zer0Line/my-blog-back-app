@@ -9,40 +9,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 @Service
 public class FilesService {
 
-    public static final String UPLOAD_DIR = "uploads/";
     public static final String POST_IMAGE_DIR = "post-images/";
-
-    public String upload(MultipartFile file) {
-        try {
-            Path uploadDir = Paths.get(UPLOAD_DIR);
-            if (!Files.exists(uploadDir)) {
-                Files.createDirectories(uploadDir);
-            }
-
-            // Сохраняем файл
-            Path filePath = uploadDir.resolve(file.getOriginalFilename());
-            file.transferTo(filePath);
-
-            return file.getOriginalFilename();
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-    }
-
-    public Resource download(String filename) {
-        try {
-            Path filePath = Paths.get(UPLOAD_DIR).resolve(filename).normalize();
-            byte[] content = Files.readAllBytes(filePath);
-
-            return new ByteArrayResource(content);
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-    }
 
     public void uploadPostImage(Long postId, MultipartFile file) {
         try {
@@ -75,22 +47,34 @@ public class FilesService {
                 }
             }
 
-            if (content == null) {
-                return null;
-            }
-
-            return new ByteArrayResource(content);
+            return Optional.ofNullable(content)
+                    .map(ByteArrayResource::new)
+                    .orElse(null);
         } catch (IOException e) {
-            return null;
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 
     private String getFileExtension(String filename) {
-        if (filename == null) {
-            return "";
-        }
+        filename = Optional.ofNullable(filename).orElse("");
         int lastDot = filename.lastIndexOf('.');
         return lastDot > 0 ? filename.substring(lastDot) : "";
     }
 
+    public void deletePostImage(Long postId) {
+        try {
+            Path imageDir = Paths.get(POST_IMAGE_DIR);
+            String[] extensions = {".jpg", ".jpeg", ".png", ".gif", ".webp"};
+
+            for (String ext : extensions) {
+                Path filePath = imageDir.resolve(postId + ext).normalize();
+                if (Files.exists(filePath)) {
+                    Files.delete(filePath);
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
 }

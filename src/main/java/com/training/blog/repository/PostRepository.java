@@ -51,7 +51,7 @@ public class PostRepository {
     public PostResponse create(String title, String text, List<String> tags) {
         String tagsString = tags != null ? String.join(",", tags) : "";
 
-        String insertSql = "INSERT INTO posts (title, text, tags, likes_count, comments_count) VALUES (?, ?, ?,0,0)";
+        String insertSql = "INSERT INTO posts (title, text, tags, likes_count) VALUES (?, ?, ?,0)";
 
         PreparedStatementCreator psc = connection -> {
             PreparedStatement ps = connection.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS);
@@ -96,7 +96,24 @@ public class PostRepository {
         return jdbcTemplate.queryForObject(sql, this::mapRow, id);
     }
 
-    private PostResponse mapRow(ResultSet rs, int rowNum) throws SQLException {
+    public Long addLike(Long id) {
+        String sql = "UPDATE posts SET likes_count = likes_count +1 WHERE id = ?";
+        int updated = jdbcTemplate.update(sql, id);
+
+        if (updated == 0) {
+            return null;
+        }
+
+ String count = "SELECT likes_count FROM posts WHERE id = ?";
+ return jdbcTemplate.queryForObject(count, Long.class, id);
+ }
+
+ public void delete(Long id) {
+ String sql = "DELETE FROM posts WHERE id = ?";
+ jdbcTemplate.update(sql, id);
+ }
+
+ private PostResponse mapRow(ResultSet rs, int rowNum) throws SQLException {
         return new PostResponse(
                 rs.getLong("id"),
                 rs.getString("title"),
