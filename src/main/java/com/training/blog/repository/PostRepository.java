@@ -10,7 +10,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class PostRepository {
@@ -21,31 +23,72 @@ public class PostRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public List<PostResponse> findAll(String search, int offset, int limit) {
-        String sql = """
+    public List<PostResponse> findAll(String textQuery, List<String> tags, int offset, int limit) {
+        StringBuilder sql = new StringBuilder("""
                 SELECT p.id, p.title, p.text, p.tags, p.likes_count, COUNT(c.id) as comments_count
                 FROM posts p
                 LEFT JOIN comments c ON p.id = c.post_id
-                WHERE ? = '' OR p.title LIKE ? OR p.text LIKE ?
+                WHERE 1=1
+                """);
+
+        List<Object> params = new ArrayList<>();
+
+        if (textQuery != null && !textQuery.isEmpty()) {
+            sql.append(" AND (p.title LIKE ? OR p.text LIKE ?)");
+            String searchPattern = "%" + textQuery + "%";
+            params.add(searchPattern);
+            params.add(searchPattern);
+        }
+
+        // Фильтрация тегов по "И"
+        if (tags != null && !tags.isEmpty()) {
+            for (String tag : tags) {
+                sql.append(" AND p.tags LIKE ?");
+                params.add("%" + tag + "%");
+            }
+        }
+
+        sql.append("""
                 GROUP BY p.id
                 ORDER BY p.id
                 LIMIT ? OFFSET ?
-                """;
-        String searchPattern = "%" + search + "%";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> new PostResponse(
+                """);
+
+        params.add(limit);
+        params.add(offset);
+
+        return jdbcTemplate.query(sql.toString(), (rs, rowNum) -> new PostResponse(
                 rs.getLong("id"),
                 rs.getString("title"),
                 rs.getString("text"),
                 parseTags(rs.getString("tags")),
                 rs.getLong("likes_count"),
                 rs.getLong("comments_count")
-        ), search, searchPattern, search, limit, offset);
+        ), params.toArray());
     }
 
-    public long count(String search) {
-        String sql = "SELECT COUNT(*) FROM posts WHERE ? = '' OR title LIKE ? OR text LIKE ?";
-        String searchPattern = "%" + search + "%";
-        return jdbcTemplate.queryForObject(sql, Long.class, search, searchPattern, searchPattern);
+    public long count(String textQuery, List<String> tags) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM posts WHERE 1=1");
+
+        List<Object> params = new java.util.ArrayList<>();
+
+        if (textQuery != null && !textQuery.isEmpty()) {
+            sql.append(" AND (title LIKE ? OR text LIKE ?)");
+            String searchPattern = "%" + textQuery + "%";
+            params.add(searchPattern);
+            params.add(searchPattern);
+        }
+
+        if (tags != null && !tags.isEmpty()) {
+            for (String tag : tags) {
+                sql.append(" AND tags LIKE ?");
+                params.add("%" + tag + "%");
+            }
+        }
+
+        return Optional.ofNullable(
+                        jdbcTemplate.queryForObject(sql.toString(), Long.class, params.toArray()))
+                .orElse(0L);
     }
 
     public PostResponse create(String title, String text, List<String> tags) {
@@ -64,10 +107,7 @@ public class PostRepository {
         KeyHolder keyHolder = new org.springframework.jdbc.support.GeneratedKeyHolder();
         jdbcTemplate.update(psc, keyHolder);
 
-        Long generatedId = keyHolder.getKey().longValue();
-        if (generatedId == null) {
-            throw new RuntimeException("Failed to get generated id");
-        }
+        Long generatedId = Optional.ofNullable(keyHolder.getKey()).map(Number::longValue).orElseThrow();
 
         return findById(generatedId);
     }
@@ -104,16 +144,16 @@ public class PostRepository {
             return null;
         }
 
- String count = "SELECT likes_count FROM posts WHERE id = ?";
- return jdbcTemplate.queryForObject(count, Long.class, id);
- }
+        String count = "SELECT likes_count FROM posts WHERE id = ?";
+        return jdbcTemplate.queryForObject(count, Long.class, id);
+    }
 
- public void delete(Long id) {
- String sql = "DELETE FROM posts WHERE id = ?";
- jdbcTemplate.update(sql, id);
- }
+    public void delete(Long id) {
+        String sql = "DELETE FROM posts WHERE id = ?";
+        jdbcTemplate.update(sql, id);
+    }
 
- private PostResponse mapRow(ResultSet rs, int rowNum) throws SQLException {
+    private PostResponse mapRow(ResultSet rs, int rowNum) throws SQLException {
         return new PostResponse(
                 rs.getLong("id"),
                 rs.getString("title"),

@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class CommentRepository {
@@ -27,11 +28,6 @@ public class CommentRepository {
         return jdbcTemplate.query(sql, this::mapRow, postId);
     }
 
-    public long countByPostId(Long postId) {
-        String sql = "SELECT COUNT(*) FROM comments WHERE post_id = ?";
-        return jdbcTemplate.queryForObject(sql, Long.class, postId);
-    }
-
     public Comment create(Long postId, String text) {
         String insertSql = "INSERT INTO comments (post_id, text) VALUES (?, ?)";
 
@@ -45,10 +41,7 @@ public class CommentRepository {
         KeyHolder keyHolder = new org.springframework.jdbc.support.GeneratedKeyHolder();
         jdbcTemplate.update(psc, keyHolder);
 
-        Long generatedId = keyHolder.getKey().longValue();
-        if (generatedId == null) {
-            throw new RuntimeException("Failed to get generated id");
-        }
+        Long generatedId = Optional.ofNullable(keyHolder.getKey()).map(Number::longValue).orElseThrow();
 
         return findById(generatedId);
     }
@@ -64,15 +57,15 @@ public class CommentRepository {
         return findById(id);
     }
 
-public void delete(Long id) {
- String sql = "DELETE FROM comments WHERE id = ?";
- jdbcTemplate.update(sql, id);
- }
+    public void delete(Long id) {
+        String sql = "DELETE FROM comments WHERE id = ?";
+        jdbcTemplate.update(sql, id);
+    }
 
- public void deleteByPostId(Long postId) {
- String sql = "DELETE FROM comments WHERE post_id = ?";
- jdbcTemplate.update(sql, postId);
- }
+    public void deleteByPostId(Long postId) {
+        String sql = "DELETE FROM comments WHERE post_id = ?";
+        jdbcTemplate.update(sql, postId);
+    }
 
     public Comment findById(Long id) {
         String sql = "SELECT * FROM comments WHERE id = ?";

@@ -7,6 +7,7 @@ import com.training.blog.repository.CommentRepository;
 import com.training.blog.repository.PostRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -36,11 +37,35 @@ public class PostService {
 
     public PostsPageResponse getPosts(String search, int pageNumber, int pageSize) {
         int offset = (pageNumber - 1) * pageSize;
+
+        String[] searchWords = search.split("\\s+");
+        List<String> tags = new ArrayList<>();
+        StringBuilder textSearch = new StringBuilder();
+
+        for (String word : searchWords) {
+            if (word.isEmpty()) {
+                continue;
+            }
+            if (word.startsWith("#")) {
+                String tag = word.substring(1);
+                if (!tag.isEmpty()) {
+                    tags.add(tag);
+                }
+            } else {
+                if (!textSearch.isEmpty()) {
+                    textSearch.append(" ");
+                }
+                textSearch.append(word);
+            }
+        }
+
+        String textQuery = textSearch.toString();
+
         PostsPageResponse response;
-        List<PostResponse> posts = postRepository.findAll(search, offset, pageSize);
+        List<PostResponse> posts = postRepository.findAll(textQuery, tags, offset, pageSize);
 
         if (!posts.isEmpty()) {
-            long total = postRepository.count(search);
+            long total = postRepository.count(textQuery, tags);
             int lastPage = (int) Math.ceil((double) total / pageSize);
 
             boolean hasPrev = pageNumber > 1;
@@ -63,3 +88,5 @@ public class PostService {
         postRepository.delete(id);
     }
 }
+
+

@@ -1,7 +1,7 @@
 package com.training.blog.service;
 
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -31,24 +33,29 @@ public class FilesService {
         }
     }
 
-    public Resource downloadPostImage(Long postId) {
+    public Map<MediaType, ByteArrayResource> downloadPostImage(Long postId) {
         try {
             Path imageDir = Paths.get(POST_IMAGE_DIR);
-
-            // Ищем файл с любым расширением для данного postId
             byte[] content = null;
-            String[] extensions = {".jpg", ".jpeg", ".png", ".gif", ".webp"};
+            MediaType mediaType = null;
+            Map<String, MediaType> extensions = new HashMap<>();
+            extensions.put(".jpg", MediaType.IMAGE_JPEG);
+            extensions.put(".jpeg", MediaType.IMAGE_JPEG);
+            extensions.put(".png", MediaType.IMAGE_PNG);
+            extensions.put(".gif", MediaType.IMAGE_GIF);
 
-            for (String ext : extensions) {
+            for (String ext : extensions.keySet()) {
                 Path filePath = imageDir.resolve(postId + ext).normalize();
                 if (Files.exists(filePath)) {
                     content = Files.readAllBytes(filePath);
+                    mediaType = extensions.get(ext);
                     break;
                 }
             }
 
+            MediaType finalMediaType = mediaType;
             return Optional.ofNullable(content)
-                    .map(ByteArrayResource::new)
+                    .map(byteArray -> Map.of(finalMediaType, new ByteArrayResource(byteArray)))
                     .orElse(null);
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage(), e);
