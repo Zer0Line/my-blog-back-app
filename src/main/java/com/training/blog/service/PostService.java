@@ -1,14 +1,17 @@
 package com.training.blog.service;
 
+import com.training.blog.dto.Post;
 import com.training.blog.dto.PostResponse;
 import com.training.blog.dto.PostsPageResponse;
-import com.training.blog.model.Post;
+import com.training.blog.exception.PostNotFoundException;
 import com.training.blog.repository.CommentRepository;
 import com.training.blog.repository.PostRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PostService {
@@ -23,14 +26,17 @@ public class PostService {
         this.filesService = filesService;
     }
 
+    @Transactional
     public PostResponse create(Post request) {
         return postRepository.create(request.title(), request.text(), request.tags());
     }
 
     public PostResponse getById(Long id) {
-        return postRepository.findById(id);
+        return Optional.ofNullable(postRepository.findById(id))
+                .orElseThrow(() -> new PostNotFoundException(id));
     }
 
+    @Transactional
     public PostResponse update(Long id, String title, String text, List<String> tags) {
         return postRepository.update(id, title, text, tags);
     }
@@ -78,13 +84,15 @@ public class PostService {
         return response;
     }
 
+    @Transactional
     public Long addLike(Long id) {
         return postRepository.addLike(id);
     }
 
+    @Transactional
     public void delete(Long id) {
-        commentRepository.deleteByPostId(id);
         filesService.deletePostImage(id);
+        commentRepository.deleteByPostId(id);
         postRepository.delete(id);
     }
 }

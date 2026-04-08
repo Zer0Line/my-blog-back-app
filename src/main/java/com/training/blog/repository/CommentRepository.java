@@ -1,7 +1,7 @@
 package com.training.blog.repository;
 
 
-import com.training.blog.model.Comment;
+import com.training.blog.dto.Comment;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.support.KeyHolder;

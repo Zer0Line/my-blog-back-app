@@ -1,10 +1,11 @@
 package com.training.blog.controller;
 
+import com.training.blog.dto.Post;
 import com.training.blog.dto.PostResponse;
 import com.training.blog.dto.PostsPageResponse;
 import com.training.blog.dto.UpdatePostRequest;
-import com.training.blog.model.Post;
 import com.training.blog.service.PostService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,27 +36,28 @@ public class PostsController {
     }
 
     @GetMapping("/{id}")
-    public PostResponse getPost(@PathVariable("id") Long id) {
+    public PostResponse getPost(@PathVariable(name = "id") Long id) {
         return postService.getById(id);
     }
 
     @PostMapping
-    public PostResponse createPost(@RequestBody Post request) {
+    public PostResponse createPost(@Valid @RequestBody Post request) {
         return postService.create(request);
     }
 
     @PostMapping("/{id}/likes")
-    public Long addLike(@PathVariable("id") Long id) {
+    public Long addLike(@PathVariable(name = "id") Long id) {
         return postService.addLike(id);
     }
 
     @PutMapping("/{id}")
-    public PostResponse updatePost(@PathVariable("id") Long id, @RequestBody UpdatePostRequest request) {
+    public PostResponse updatePost(@PathVariable(name = "id") Long id,
+                                   @Valid @RequestBody UpdatePostRequest request) {
         return postService.update(id, request.title(), request.text(), request.tags());
     }
 
     @DeleteMapping("/{id}")
-    public void deletePost(@PathVariable("id") Long id) {
+    public void deletePost(@PathVariable(name = "id", required = true) Long id) {
         postService.delete(id);
     }
 

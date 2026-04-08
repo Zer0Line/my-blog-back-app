@@ -40,6 +40,10 @@ dependencies {
     // Servlet API
     implementation "jakarta.servlet:jakarta.servlet-api:${jakartaVersion}"
 
+    // Jakarta Validation
+    implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+    implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
+
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
 
     implementation 'com.h2database:h2:2.2.224'

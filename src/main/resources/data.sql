@@ -1,3 +1,0 @@
--- Тестовые данные для постов
---INSERT INTO posts (title, text, tags, likes_count, comments_count) VALUES
---('Название поста1', 'Текст поста в формате Markdown...', 'tag_1,tag_2',5,1),

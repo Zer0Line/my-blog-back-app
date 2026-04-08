@@ -14,7 +14,12 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import javax.sql.DataSource;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringJUnitConfig(classes = {TestConfiguration.class, PostRepository.class})
 @TestPropertySource(locations = "classpath:test-application.properties")
@@ -31,20 +36,40 @@ public class PostRepositoryTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DROP TABLE IF EXISTS post_tags");
         jdbcTemplate.execute("DROP TABLE IF EXISTS comments");
+        jdbcTemplate.execute("DROP TABLE IF EXISTS tags");
         jdbcTemplate.execute("DROP TABLE IF EXISTS posts");
 
         ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
         populator.addScript(new ClassPathResource("test-schema.sql"));
         populator.execute(dataSource);
 
+        // Вставляем теги
         jdbcTemplate.execute("""
-                INSERT INTO posts (title, text, tags, likes_count) VALUES
-                ('Post 1', 'Text 1', 'tag1,tag2', 0),
-                ('Post 2', 'Text 2', 'tag1', 0),
-                ('Post 3', 'Text 3', 'tag2', 0),
-                ('Post 4', 'Text 4', 'other', 0)
-                """);
+            INSERT INTO tags (name) VALUES
+            ('tag1'), ('tag2'), ('other')
+            """);
+
+        // Вставляем посты
+        jdbcTemplate.execute("""
+            INSERT INTO posts (title, text, likes_count) VALUES
+            ('Post 1', 'Text 1', 0),
+            ('Post 2', 'Text 2', 0),
+            ('Post 3', 'Text 3', 0),
+            ('Post 4', 'Text 4', 0)
+            """);
+
+        // Связываем посты с тегами через post_tags
+        // Post 1: tag1, tag2 | Post 2: tag1 | Post 3: tag2 | Post 4: other
+        jdbcTemplate.execute("""
+            INSERT INTO post_tags (post_id, tag_id) VALUES
+            (1, 1),
+            (1, 2),
+            (2, 1),
+            (3, 2),
+            (4, 3)
+            """);
     }
 
     @Test

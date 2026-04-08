@@ -1,8 +1,9 @@
 package com.training.blog.controller;
 
+import com.training.blog.dto.Comment;
 import com.training.blog.dto.CreateCommentRequest;
-import com.training.blog.model.Comment;
 import com.training.blog.service.CommentService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -26,18 +26,13 @@ public class CommentsController {
     }
 
     @PostMapping("/{id}/comments")
-    public Comment createComment(@PathVariable("id") Long postId, @RequestBody CreateCommentRequest request) {
+    public Comment createComment(@PathVariable("id") Long postId, @Valid @RequestBody CreateCommentRequest request) {
         return commentService.create(postId, request.text());
     }
 
     @GetMapping("/{id}/comments")
     public List<Comment> getCommentsByPostId(@PathVariable("id") Long postId) {
         return commentService.getByPostId(postId);
-    }
-
-    @GetMapping("/undefined/comments")
-    public List<Comment> getCommentsByPostId() {
-        return Collections.emptyList();
     }
 
     @GetMapping("/{id}/comments/{comment_id}")
@@ -49,7 +44,7 @@ public class CommentsController {
     public Comment updateComment(
             @PathVariable("id") Long postId,
             @PathVariable("comment_id") Long commentId,
-            @RequestBody CreateCommentRequest request) {
+            @Valid @RequestBody CreateCommentRequest request) {
         return commentService.update(commentId, request.text());
     }
 

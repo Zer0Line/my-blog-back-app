@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
-public record UpdatePostRequest(
+public record Post(
         Long id,
 
         @NotBlank(message = "Title is required")
@@ -13,7 +13,6 @@ public record UpdatePostRequest(
         String title,
 
         @NotBlank(message = "Text is required")
-        @Size(max = 10000, message = "Text must not exceed 10000 characters")
         String text,
 
         List<String> tags) {

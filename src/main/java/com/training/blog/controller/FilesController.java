@@ -27,7 +27,7 @@ public class FilesController {
     }
 
     @GetMapping("/{id}/image")
-    public ResponseEntity<Resource> getPostImage(@PathVariable("id") Long postId) {
+    public ResponseEntity<Resource> getPostImage(@PathVariable(name = "id") Long postId) {
         Map<MediaType, ByteArrayResource> imageMap = filesService.downloadPostImage(postId);
         if (imageMap == null) {
             return ResponseEntity.notFound().build();
@@ -42,7 +42,7 @@ public class FilesController {
 
     @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public void uploadPostImage(
-            @PathVariable("id") Long postId,
+            @PathVariable(name = "id") Long postId,
             @RequestParam(value = "image", required = false) MultipartFile file) {
         if (file != null && !file.isEmpty()) {
             filesService.uploadPostImage(postId, file);
@@ -51,7 +51,7 @@ public class FilesController {
 
     @PutMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public void updatePostImage(
-            @PathVariable("id") Long postId,
+            @PathVariable(name = "id") Long postId,
             @RequestParam(value = "image", required = false) MultipartFile file) {
         if (file != null && !file.isEmpty()) {
             filesService.uploadPostImage(postId, file);
