@@ -1,7 +1,7 @@
 package com.training.blog.controller;
 
 import com.training.blog.WebConfiguration;
-import com.training.blog.config.DataSourceConfiguration;
+import com.training.blog.config.TestConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringJUnitConfig(classes = {
-        DataSourceConfiguration.class,
+        TestConfiguration.class,
         WebConfiguration.class,
 })
 @WebAppConfiguration

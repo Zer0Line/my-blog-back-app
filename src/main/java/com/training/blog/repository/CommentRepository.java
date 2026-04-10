@@ -2,6 +2,7 @@ package com.training.blog.repository;
 
 
 import com.training.blog.dto.Comment;
+import com.training.blog.exception.CommentNotFoundException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.support.KeyHolder;
@@ -51,7 +52,7 @@ public class CommentRepository {
         int updated = jdbcTemplate.update(sql, text, id);
 
         if (updated == 0) {
-            return null;
+            throw new CommentNotFoundException(id);
         }
 
         return findById(id);
@@ -78,5 +79,10 @@ public class CommentRepository {
                 rs.getString("text"),
                 rs.getLong("post_id")
         );
+    }
+
+    public Comment findByPostIdAndId(Long postId, Long commentId) {
+        String sql = "SELECT * FROM comments WHERE post_id = ? AND id = ?";
+        return jdbcTemplate.queryForObject(sql, this::mapRow, postId, commentId);
     }
 }

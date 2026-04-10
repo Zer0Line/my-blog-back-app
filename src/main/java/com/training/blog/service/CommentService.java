@@ -21,7 +21,7 @@ public class CommentService {
     }
 
     public Comment getById(Long postId, Long commentId) {
-        return commentRepository.findById(commentId);
+        return commentRepository.findByPostIdAndId(postId, commentId);
     }
 
     @Transactional

@@ -1,6 +1,8 @@
 package com.training.blog.controller;
 
 import com.training.blog.WebConfiguration;
+import com.training.blog.service.FilesService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,9 +30,17 @@ class FilesControllerTest {
 
     private MockMvc mockMvc;
 
+    @Autowired
+    private FilesService filesService;
+
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
+    }
+
+    @AfterEach
+    void tearDown() {
+        filesService.deletePostImage(1L);
     }
 
     @Test
