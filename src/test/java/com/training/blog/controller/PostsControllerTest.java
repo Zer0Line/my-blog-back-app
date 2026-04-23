@@ -1,19 +1,17 @@
 package com.training.blog.controller;
 
+import com.training.blog.TestUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-
-import javax.sql.DataSource;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -35,49 +33,17 @@ class PostsControllerTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    @Autowired
-    private DataSource dataSource;
-
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
+        TestUtils.executeSqlScript(jdbcTemplate, "setup_data.sql");
+    }
 
-        jdbcTemplate.execute("DROP TABLE IF EXISTS post_tags");
-        jdbcTemplate.execute("DROP TABLE IF EXISTS comments");
-        jdbcTemplate.execute("DROP TABLE IF EXISTS tags");
-        jdbcTemplate.execute("DROP TABLE IF EXISTS posts");
-
-        ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
-        populator.addScript(new ClassPathResource("test-schema.sql"));
-        populator.execute(dataSource);
-
-        // Вставляем теги
-        jdbcTemplate.execute("""
-            INSERT INTO tags (name) VALUES
-            ('tag1'), ('tag2'), ('other')
-            """);
-
-        // Вставляем посты
-        jdbcTemplate.execute("""
-            INSERT INTO posts (title, text, likes_count) VALUES
-            ('Post 1', 'Text 1', 0),
-            ('Post 2', 'Text 2', 0),
-            ('Post 3', 'Text 3', 0),
-            ('Post 4', 'Text 4', 0)
-            """);
-
-        // Связываем посты с тегами через post_tags
-        // Post 1: tag1, tag2 | Post 2: tag1 | Post 3: tag2 | Post 4: other
-        jdbcTemplate.execute("""
-            INSERT INTO post_tags (post_id, tag_id) VALUES
-            (1, 1),
-            (1, 2),
-            (2, 1),
-            (3, 2),
-            (4, 3)
-            """);
+    @AfterEach
+    void tearDown() {
+        TestUtils.executeSqlScript(jdbcTemplate, "cleanup.sql");
     }
 
     @Test
