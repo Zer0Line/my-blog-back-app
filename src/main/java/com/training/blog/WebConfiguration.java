@@ -1,13 +1,11 @@
 package com.training.blog;
 
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@Configuration
-@EnableWebMvc
-@ComponentScan(basePackages = {"com.training.blog"})
-@PropertySource("classpath:application.properties")
+@SpringBootApplication
 public class WebConfiguration {
+    public static void main(String[] args) {
+        SpringApplication.run(WebConfiguration.class, args);
+    }
 }
