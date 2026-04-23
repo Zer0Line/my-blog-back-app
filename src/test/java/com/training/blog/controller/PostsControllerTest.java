@@ -1,17 +1,14 @@
 package com.training.blog.controller;
 
-import com.training.blog.WebConfiguration;
-import com.training.blog.config.TestConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -25,12 +22,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringJUnitConfig(classes = {
-        TestConfiguration.class,
-        WebConfiguration.class,
-})
-@WebAppConfiguration
-@TestPropertySource(locations = "classpath:test-application.properties")
+@SpringBootTest(
+        // Cоздаёт mock-версию веб-слоя, без запуска реального сервера
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK
+)
+@AutoConfigureMockMvc
 class PostsControllerTest {
 
     @Autowired

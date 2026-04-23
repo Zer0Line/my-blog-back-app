@@ -1,15 +1,13 @@
 package com.training.blog.repository;
 
-import com.training.blog.config.TestConfiguration;
 import com.training.blog.dto.PostResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import javax.sql.DataSource;
 import java.util.List;
@@ -21,12 +19,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SpringJUnitConfig(classes = {TestConfiguration.class, PostRepository.class})
-@TestPropertySource(locations = "classpath:test-application.properties")
-public class PostRepositoryTest {
+
+@SpringBootTest
+class PostRepositoryTest {
 
     @Autowired
-    private PostRepository postRepository;
+    PostRepository postRepository;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -47,29 +45,29 @@ public class PostRepositoryTest {
 
         // Вставляем теги
         jdbcTemplate.execute("""
-            INSERT INTO tags (name) VALUES
-            ('tag1'), ('tag2'), ('other')
-            """);
+                INSERT INTO tags (name) VALUES
+                ('tag1'), ('tag2'), ('other')
+                """);
 
         // Вставляем посты
         jdbcTemplate.execute("""
-            INSERT INTO posts (title, text, likes_count) VALUES
-            ('Post 1', 'Text 1', 0),
-            ('Post 2', 'Text 2', 0),
-            ('Post 3', 'Text 3', 0),
-            ('Post 4', 'Text 4', 0)
-            """);
+                INSERT INTO posts (title, text, likes_count) VALUES
+                ('Post 1', 'Text 1', 0),
+                ('Post 2', 'Text 2', 0),
+                ('Post 3', 'Text 3', 0),
+                ('Post 4', 'Text 4', 0)
+                """);
 
         // Связываем посты с тегами через post_tags
         // Post 1: tag1, tag2 | Post 2: tag1 | Post 3: tag2 | Post 4: other
         jdbcTemplate.execute("""
-            INSERT INTO post_tags (post_id, tag_id) VALUES
-            (1, 1),
-            (1, 2),
-            (2, 1),
-            (3, 2),
-            (4, 3)
-            """);
+                INSERT INTO post_tags (post_id, tag_id) VALUES
+                (1, 1),
+                (1, 2),
+                (2, 1),
+                (3, 2),
+                (4, 3)
+                """);
     }
 
     @Test
