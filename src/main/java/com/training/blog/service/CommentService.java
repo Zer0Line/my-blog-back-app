@@ -30,12 +30,12 @@ public class CommentService {
     }
 
     @Transactional
-    public Comment update(Long commentId, String text) {
-        return commentRepository.update(commentId, text);
+    public Comment update(Long postId, Long commentId, String text) {
+        return commentRepository.update(postId, commentId, text);
     }
 
     @Transactional
-    public void delete(Long commentId) {
-        commentRepository.delete(commentId);
+    public void delete(Long commentId, Long postId) {
+        commentRepository.delete(commentId, postId);
     }
 }

@@ -26,7 +26,9 @@ public class CommentsController {
     }
 
     @PostMapping("/{id}/comments")
-    public Comment createComment(@PathVariable("id") Long postId, @Valid @RequestBody CreateCommentRequest request) {
+    public Comment createComment(
+            @PathVariable("id") Long postId,
+            @Valid @RequestBody CreateCommentRequest request) {
         return commentService.create(postId, request.text());
     }
 
@@ -36,7 +38,9 @@ public class CommentsController {
     }
 
     @GetMapping("/{id}/comments/{comment_id}")
-    public Comment getCommentById(@PathVariable("id") Long postId, @PathVariable("comment_id") Long commentId) {
+    public Comment getCommentById(
+            @PathVariable("id") Long postId,
+            @PathVariable("comment_id") Long commentId) {
         return commentService.getById(postId, commentId);
     }
 
@@ -45,12 +49,14 @@ public class CommentsController {
             @PathVariable("id") Long postId,
             @PathVariable("comment_id") Long commentId,
             @Valid @RequestBody CreateCommentRequest request) {
-        return commentService.update(commentId, request.text());
+        return commentService.update(postId, commentId, request.text());
     }
 
     @DeleteMapping("/{id}/comments/{comment_id}")
-    public void deleteComment(@PathVariable("id") Long postId, @PathVariable("comment_id") Long commentId) {
-        commentService.delete(commentId);
+    public void deleteComment(
+            @PathVariable("id") Long postId,
+            @PathVariable("comment_id") Long commentId) {
+        commentService.delete(postId, commentId);
     }
 }
 

@@ -47,20 +47,20 @@ public class CommentRepository {
         return findById(generatedId);
     }
 
-    public Comment update(Long id, String text) {
-        String sql = "UPDATE comments SET text = ? WHERE id = ?";
-        int updated = jdbcTemplate.update(sql, text, id);
+    public Comment update(Long postId, Long commentId, String text) {
+        String sql = "UPDATE comments SET text = ? WHERE post_id = ? AND id = ?";
+        int updated = jdbcTemplate.update(sql, text, postId, commentId);
 
         if (updated == 0) {
-            throw new CommentNotFoundException(id);
+            throw new CommentNotFoundException(commentId);
         }
 
-        return findById(id);
+        return findById(commentId);
     }
 
-    public void delete(Long id) {
-        String sql = "DELETE FROM comments WHERE id = ?";
-        jdbcTemplate.update(sql, id);
+    public void delete(Long id, Long postId) {
+        String sql = "DELETE FROM comments WHERE post_id = ? AND  id = ?";
+        jdbcTemplate.update(sql, postId, id);
     }
 
     public void deleteByPostId(Long postId) {
