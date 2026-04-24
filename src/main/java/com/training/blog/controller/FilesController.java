@@ -1,5 +1,6 @@
 package com.training.blog.controller;
 
+import com.training.blog.exception.MissingAttachedFileException;
 import com.training.blog.service.FilesService;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -46,6 +47,8 @@ public class FilesController {
             @RequestParam(value = "image", required = false) MultipartFile file) {
         if (file != null && !file.isEmpty()) {
             filesService.uploadPostImage(postId, file);
+        }else {
+            throw new MissingAttachedFileException();
         }
     }
 
