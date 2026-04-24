@@ -2,12 +2,14 @@ package com.training.blog.service;
 
 import com.training.blog.dto.CommentCreateRequest;
 import com.training.blog.dto.CommentResponse;
+import com.training.blog.exception.CommentNotFoundException;
 import com.training.blog.mapper.CommentMapper;
 import com.training.blog.repository.CommentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CommentService {
@@ -27,7 +29,9 @@ public class CommentService {
     }
 
     public CommentResponse getById(Long postId, Long commentId) {
-        return commentMapper.toCommentResponse(commentRepository.findByPostIdAndId(postId, commentId));
+        return Optional.ofNullable(commentRepository.findByPostIdAndId(postId, commentId))
+                .map(commentMapper::toCommentResponse)
+                .orElseThrow(() -> new CommentNotFoundException(commentId));
     }
 
     @Transactional
@@ -37,7 +41,9 @@ public class CommentService {
 
     @Transactional
     public CommentResponse update(Long postId, Long commentId, CommentCreateRequest request) {
-        return commentMapper.toCommentResponse(commentRepository.update(postId, commentId, request.text()));
+        return Optional.ofNullable(commentRepository.update(postId, commentId, request.text()))
+                .map(commentMapper::toCommentResponse)
+                .orElseThrow(() -> new CommentNotFoundException(commentId));
     }
 
     @Transactional
