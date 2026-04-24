@@ -1,7 +1,8 @@
 package com.training.blog.repository;
 
 
-import com.training.blog.dto.Comment;
+
+import com.training.blog.domain.Comment;
 import com.training.blog.exception.CommentNotFoundException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;

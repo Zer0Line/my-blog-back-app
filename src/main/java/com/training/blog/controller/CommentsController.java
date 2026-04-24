@@ -1,7 +1,7 @@
 package com.training.blog.controller;
 
-import com.training.blog.dto.Comment;
-import com.training.blog.dto.CreateCommentRequest;
+import com.training.blog.dto.CommentResponse;
+import com.training.blog.dto.CommentCreateRequest;
 import com.training.blog.service.CommentService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,30 +26,30 @@ public class CommentsController {
     }
 
     @PostMapping("/{id}/comments")
-    public Comment createComment(
+    public CommentResponse createComment(
             @PathVariable("id") Long postId,
-            @Valid @RequestBody CreateCommentRequest request) {
-        return commentService.create(postId, request.text());
+            @Valid @RequestBody CommentCreateRequest request) {
+        return commentService.create(postId, request);
     }
 
     @GetMapping("/{id}/comments")
-    public List<Comment> getCommentsByPostId(@PathVariable("id") Long postId) {
+    public List<CommentResponse> getCommentsByPostId(@PathVariable("id") Long postId) {
         return commentService.getByPostId(postId);
     }
 
     @GetMapping("/{id}/comments/{comment_id}")
-    public Comment getCommentById(
+    public CommentResponse getCommentById(
             @PathVariable("id") Long postId,
             @PathVariable("comment_id") Long commentId) {
         return commentService.getById(postId, commentId);
     }
 
     @PutMapping("/{id}/comments/{comment_id}")
-    public Comment updateComment(
+    public CommentResponse updateComment(
             @PathVariable("id") Long postId,
             @PathVariable("comment_id") Long commentId,
-            @Valid @RequestBody CreateCommentRequest request) {
-        return commentService.update(postId, commentId, request.text());
+            @Valid @RequestBody CommentCreateRequest request) {
+        return commentService.update(postId, commentId, request);
     }
 
     @DeleteMapping("/{id}/comments/{comment_id}")
