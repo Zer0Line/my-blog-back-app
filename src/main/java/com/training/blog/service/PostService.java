@@ -1,11 +1,15 @@
 package com.training.blog.service;
 
-import com.training.blog.dto.Post;
+import com.training.blog.domain.Post;
+import com.training.blog.dto.PostCreateRequest;
 import com.training.blog.dto.PostResponse;
 import com.training.blog.dto.PostsPageResponse;
+import com.training.blog.dto.UpdatePostRequest;
 import com.training.blog.exception.PostNotFoundException;
+import com.training.blog.mapper.PostMapper;
 import com.training.blog.repository.CommentRepository;
 import com.training.blog.repository.PostRepository;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,26 +23,38 @@ public class PostService {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final FilesService filesService;
+    private final PostMapper postMapper;
 
-    public PostService(PostRepository postRepository, CommentRepository commentRepository, FilesService filesService) {
+    public PostService(
+            PostRepository postRepository,
+            CommentRepository commentRepository,
+            FilesService filesService,
+            PostMapper mapper) {
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
         this.filesService = filesService;
+        this.postMapper = mapper;
     }
 
     @Transactional
-    public PostResponse create(Post request) {
-        return postRepository.create(request.title(), request.text(), request.tags());
+    public PostResponse create(PostCreateRequest request) {
+        Post post = postMapper.toPost(request);
+        return postMapper.toPostResponse(postRepository.create(post));
     }
 
     public PostResponse getById(Long id) {
         return Optional.ofNullable(postRepository.findById(id))
+                .map(postMapper::toPostResponse)
                 .orElseThrow(() -> new PostNotFoundException(id));
     }
 
     @Transactional
-    public PostResponse update(Long id, String title, String text, List<String> tags) {
-        return postRepository.update(id, title, text, tags);
+    public PostResponse update(Long id, @Valid UpdatePostRequest request) {
+        Post post = postMapper.toPost(request);
+        post.setId(id);
+        return Optional.ofNullable(postRepository.update(post))
+                .map(postMapper::toPostResponse)
+                .orElse(null);
     }
 
     public PostsPageResponse getPosts(String search, int pageNumber, int pageSize) {
@@ -68,7 +84,10 @@ public class PostService {
         String textQuery = textSearch.toString();
 
         PostsPageResponse response;
-        List<PostResponse> posts = postRepository.findAll(textQuery, tags, offset, pageSize);
+        List<PostResponse> posts =
+                postRepository.findAll(textQuery, tags, offset, pageSize).stream()
+                        .map(postMapper::toPostResponse)
+                        .toList();
 
         if (!posts.isEmpty()) {
             long total = postRepository.count(textQuery, tags);
