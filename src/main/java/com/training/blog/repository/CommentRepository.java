@@ -57,7 +57,7 @@ public class CommentRepository {
         return findById(commentId);
     }
 
-    public void delete(Long id, Long postId) {
+    public void delete(Long postId, Long id) {
         String sql = "DELETE FROM comments WHERE post_id = ? AND  id = ?";
         jdbcTemplate.update(sql, postId, id);
     }
