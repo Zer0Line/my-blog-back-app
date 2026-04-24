@@ -54,7 +54,7 @@ public class PostService {
         post.setId(id);
         return Optional.ofNullable(postRepository.update(post))
                 .map(postMapper::toPostResponse)
-                .orElse(null);
+                .orElseThrow(() -> new PostNotFoundException(id));
     }
 
     public PostsPageResponse getPosts(String search, int pageNumber, int pageSize) {
@@ -105,7 +105,8 @@ public class PostService {
 
     @Transactional
     public Long addLike(Long id) {
-        return postRepository.addLike(id);
+        return Optional.ofNullable(postRepository.addLike(id))
+                .orElseThrow(() -> new PostNotFoundException(id));
     }
 
     @Transactional
