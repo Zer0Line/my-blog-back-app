@@ -1,13 +1,11 @@
 package com.training.blog.repository;
 
-import com.training.blog.TestUtils;
 import com.training.blog.domain.Post;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.jdbc.Sql;
 
 import java.util.List;
 
@@ -19,24 +17,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-@SpringBootTest
+@JdbcTest
+@Import(PostRepository.class)
+@Sql(scripts = {"/cleanup.sql", "/setup_data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class PostRepositoryTest {
 
     @Autowired
     PostRepository postRepository;
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
-
-    @BeforeEach
-    void setUp() {
-        TestUtils.executeSqlScript(jdbcTemplate, "setup_data.sql");
-    }
-
-    @AfterEach
-    void tearDown() {
-        TestUtils.executeSqlScript(jdbcTemplate, "cleanup.sql");
-    }
 
     @Test
     void findAll_withEmptyTextQueryAndTags_returnsPostsMatchingTags() {
