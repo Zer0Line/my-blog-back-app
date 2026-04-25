@@ -9,8 +9,10 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import java.util.Optional;
+import com.training.blog.dto.ImagePayload;
 
-import java.util.Map;
+// import java.util.Map; // no longer needed
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -39,8 +41,8 @@ class FilesControllerTest {
         doNothing().when(filesService).uploadPostImage(eq(1L), any());
 
         ByteArrayResource resource = new ByteArrayResource(pngStub);
-        Map<MediaType, ByteArrayResource> responseMap = Map.of(MediaType.IMAGE_PNG, resource);
-        when(filesService.downloadPostImage(1L)).thenReturn(responseMap);
+        ImagePayload payload = new ImagePayload(MediaType.IMAGE_PNG, resource);
+        when(filesService.downloadPostImage(1L)).thenReturn(Optional.of(payload));
 
         mockMvc.perform(multipart("/api/posts/1/image").file(file))
                 .andExpect(status().isOk());

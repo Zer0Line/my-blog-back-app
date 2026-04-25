@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Map;
+// import java.util.Map; // no longer needed
 
 @RestController
 @RequestMapping("/api/posts")
@@ -29,16 +29,11 @@ public class FilesController {
 
     @GetMapping("/{id}/image")
     public ResponseEntity<Resource> getPostImage(@PathVariable(name = "id") Long postId) {
-        Map<MediaType, ByteArrayResource> imageMap = filesService.downloadPostImage(postId);
-        if (imageMap == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Map.Entry<MediaType, ByteArrayResource> entry = imageMap.entrySet().iterator().next();
-
-        return ResponseEntity.ok()
-                .contentType(entry.getKey())
-                .body(entry.getValue());
+        return filesService.downloadPostImage(postId)
+                .map(payload -> ResponseEntity.ok()
+                        .contentType(payload.getMediaType())
+                        .body((Resource)payload.getResource()))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

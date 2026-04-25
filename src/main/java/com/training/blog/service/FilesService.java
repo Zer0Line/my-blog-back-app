@@ -10,8 +10,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Map;
+import com.training.blog.dto.ImagePayload;
 
 @Service
 public class FilesService {
@@ -33,7 +34,7 @@ public class FilesService {
         }
     }
 
-    public Map<MediaType, ByteArrayResource> downloadPostImage(Long postId) {
+    public Optional<ImagePayload> downloadPostImage(Long postId) {
         try {
             Path imageDir = Paths.get(POST_IMAGE_DIR);
             byte[] content = null;
@@ -53,10 +54,10 @@ public class FilesService {
                 }
             }
 
-            MediaType finalMediaType = mediaType;
-            return Optional.ofNullable(content)
-                    .map(byteArray -> Map.of(finalMediaType, new ByteArrayResource(byteArray)))
-                    .orElse(null);
+            if (content != null && mediaType != null) {
+                return Optional.of(new ImagePayload(mediaType, new ByteArrayResource(content)));
+            }
+            return Optional.empty();
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
