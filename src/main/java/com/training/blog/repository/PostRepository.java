@@ -97,10 +97,17 @@ public class PostRepository {
         }
 
         if (tags != null && !tags.isEmpty()) {
-            for (String tag : tags) {
-                sql.append(" AND t.name = ?");
-                params.add(tag);
+            sql.append(" AND p.id IN (");
+            sql.append("SELECT pt2.post_id FROM post_tags pt2 ");
+            sql.append("JOIN tags t2 ON pt2.tag_id = t2.id ");
+            sql.append("WHERE t2.name IN (");
+            for (int i = 0; i < tags.size(); i++) {
+                sql.append(i > 0 ? ",?" : "?");
+                params.add(tags.get(i));
             }
+            sql.append(") GROUP BY pt2.post_id HAVING COUNT(DISTINCT t2.name) = ?");
+            params.add(tags.size());
+            sql.append(")");
         }
 
         return Optional.ofNullable(
