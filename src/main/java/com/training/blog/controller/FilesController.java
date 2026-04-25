@@ -2,7 +2,6 @@ package com.training.blog.controller;
 
 import com.training.blog.exception.MissingAttachedFileException;
 import com.training.blog.service.FilesService;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -31,8 +30,8 @@ public class FilesController {
     public ResponseEntity<Resource> getPostImage(@PathVariable(name = "id") Long postId) {
         return filesService.downloadPostImage(postId)
                 .map(payload -> ResponseEntity.ok()
-                        .contentType(payload.getMediaType())
-                        .body((Resource)payload.getResource()))
+                        .contentType(payload.mediaType())
+                        .body((Resource) payload.resource()))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -42,7 +41,7 @@ public class FilesController {
             @RequestParam(value = "image", required = false) MultipartFile file) {
         if (file != null && !file.isEmpty()) {
             filesService.uploadPostImage(postId, file);
-        }else {
+        } else {
             throw new MissingAttachedFileException();
         }
     }

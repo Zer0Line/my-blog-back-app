@@ -1,5 +1,6 @@
 package com.training.blog.controller;
 
+import com.training.blog.dto.ImagePayload;
 import com.training.blog.service.FilesService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,10 +10,8 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import java.util.Optional;
-import com.training.blog.dto.ImagePayload;
 
-// import java.util.Map; // no longer needed
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;

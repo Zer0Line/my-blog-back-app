@@ -24,12 +24,12 @@ public class Post {
         this.id = id;
         this.title = title;
         this.text = text;
-        this.tags=tags;
+        this.tags = tags;
     }
 
     public Post(String title, String text, List<String> tags) {
         this.title = title;
         this.text = text;
-        this.tags=tags;
+        this.tags = tags;
     }
 }

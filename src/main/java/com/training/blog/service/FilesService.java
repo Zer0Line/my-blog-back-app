@@ -1,5 +1,6 @@
 package com.training.blog.service;
 
+import com.training.blog.dto.ImagePayload;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -10,9 +11,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.Optional;
 import java.util.Map;
-import com.training.blog.dto.ImagePayload;
+import java.util.Optional;
 
 @Service
 public class FilesService {
