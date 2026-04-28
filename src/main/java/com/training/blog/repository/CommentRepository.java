@@ -1,8 +1,7 @@
 package com.training.blog.repository;
 
 
-import com.training.blog.dto.Comment;
-import com.training.blog.exception.CommentNotFoundException;
+import com.training.blog.domain.Comment;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.support.KeyHolder;
@@ -47,20 +46,20 @@ public class CommentRepository {
         return findById(generatedId);
     }
 
-    public Comment update(Long id, String text) {
-        String sql = "UPDATE comments SET text = ? WHERE id = ?";
-        int updated = jdbcTemplate.update(sql, text, id);
+    public Comment update(Long postId, Long commentId, String text) {
+        String sql = "UPDATE comments SET text = ? WHERE post_id = ? AND id = ?";
+        int updated = jdbcTemplate.update(sql, text, postId, commentId);
 
         if (updated == 0) {
-            throw new CommentNotFoundException(id);
+            return null;
         }
 
-        return findById(id);
+        return findById(commentId);
     }
 
-    public void delete(Long id) {
-        String sql = "DELETE FROM comments WHERE id = ?";
-        jdbcTemplate.update(sql, id);
+    public void delete(Long postId, Long id) {
+        String sql = "DELETE FROM comments WHERE post_id = ? AND  id = ?";
+        jdbcTemplate.update(sql, postId, id);
     }
 
     public void deleteByPostId(Long postId) {

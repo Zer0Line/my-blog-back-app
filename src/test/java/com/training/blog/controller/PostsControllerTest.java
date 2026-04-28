@@ -1,23 +1,23 @@
 package com.training.blog.controller;
 
-import com.training.blog.WebConfiguration;
-import com.training.blog.config.TestConfiguration;
-import org.junit.jupiter.api.BeforeEach;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.training.blog.dto.PostCreateRequest;
+import com.training.blog.dto.PostResponse;
+import com.training.blog.dto.PostsPageResponse;
+import com.training.blog.service.PostService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 
-import javax.sql.DataSource;
+import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -25,67 +25,30 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringJUnitConfig(classes = {
-        TestConfiguration.class,
-        WebConfiguration.class,
-})
-@WebAppConfiguration
-@TestPropertySource(locations = "classpath:test-application.properties")
+
+@WebMvcTest(PostsController.class)
 class PostsControllerTest {
 
     @Autowired
-    private WebApplicationContext wac;
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
-
-    @Autowired
-    private DataSource dataSource;
-
     private MockMvc mockMvc;
 
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
+    @Autowired
+    private ObjectMapper objectMapper;
 
-        jdbcTemplate.execute("DROP TABLE IF EXISTS post_tags");
-        jdbcTemplate.execute("DROP TABLE IF EXISTS comments");
-        jdbcTemplate.execute("DROP TABLE IF EXISTS tags");
-        jdbcTemplate.execute("DROP TABLE IF EXISTS posts");
-
-        ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
-        populator.addScript(new ClassPathResource("test-schema.sql"));
-        populator.execute(dataSource);
-
-        // Вставляем теги
-        jdbcTemplate.execute("""
-            INSERT INTO tags (name) VALUES
-            ('tag1'), ('tag2'), ('other')
-            """);
-
-        // Вставляем посты
-        jdbcTemplate.execute("""
-            INSERT INTO posts (title, text, likes_count) VALUES
-            ('Post 1', 'Text 1', 0),
-            ('Post 2', 'Text 2', 0),
-            ('Post 3', 'Text 3', 0),
-            ('Post 4', 'Text 4', 0)
-            """);
-
-        // Связываем посты с тегами через post_tags
-        // Post 1: tag1, tag2 | Post 2: tag1 | Post 3: tag2 | Post 4: other
-        jdbcTemplate.execute("""
-            INSERT INTO post_tags (post_id, tag_id) VALUES
-            (1, 1),
-            (1, 2),
-            (2, 1),
-            (3, 2),
-            (4, 3)
-            """);
-    }
+    @MockitoBean
+    private PostService postService;
 
     @Test
     void getPosts() throws Exception {
+        PostsPageResponse response = new PostsPageResponse(List.of(
+                new PostResponse(1L, "Post 1", "Text 1", List.of("tag1"), 0L, 0L),
+                new PostResponse(2L, "Post 2", "Text 2", List.of("tag2"), 0L, 0L),
+                new PostResponse(3L, "Post 3", "Text 3", List.of("tag3"), 0L, 0L),
+                new PostResponse(4L, "Post 4", "Text 4", List.of("other"), 0L, 0L)
+        ), false, false, 1);
+
+        when(postService.getPosts(anyString(), anyInt(), anyInt())).thenReturn(response);
+
         mockMvc.perform(get("/api/posts"))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -95,6 +58,9 @@ class PostsControllerTest {
 
     @Test
     void getPost() throws Exception {
+        PostResponse response = new PostResponse(1L, "Post 1", "Text 1", List.of("tag1"), 0L, 0L);
+        when(postService.getById(1L)).thenReturn(response);
+
         mockMvc.perform(get("/api/posts/1"))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -104,16 +70,13 @@ class PostsControllerTest {
 
     @Test
     void createPost() throws Exception {
-        String requestBody = """
-                {
-                    "title": "New Post",
-                    "text": "Post content",
-                    "tags": ["spring"]
-                }
-                """;
+        PostCreateRequest request = new PostCreateRequest("New Post", "Post content", List.of("spring"));
+        PostResponse response = new PostResponse(1L, "New Post", "Post content", List.of("spring"), 0L, 0L);
+        when(postService.create(any())).thenReturn(response);
+
         mockMvc.perform(post("/api/posts")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(jsonPath("$.id").exists())
@@ -126,6 +89,8 @@ class PostsControllerTest {
 
     @Test
     void addLike() throws Exception {
+        when(postService.addLike(1L)).thenReturn(1L);
+
         mockMvc.perform(post("/api/posts/1/likes"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(1L));

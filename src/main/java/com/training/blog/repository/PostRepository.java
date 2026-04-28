@@ -1,6 +1,6 @@
 package com.training.blog.repository;
 
-import com.training.blog.dto.PostResponse;
+import com.training.blog.domain.Post;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.support.KeyHolder;
@@ -21,7 +21,7 @@ public class PostRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public List<PostResponse> findAll(String textQuery, List<String> tags, int offset, int limit) {
+    public List<Post> findAll(String textQuery, List<String> tags, int offset, int limit) {
         StringBuilder sql = new StringBuilder("""
                 SELECT DISTINCT p.id, p.title, p.text, p.likes_count, COUNT(DISTINCT c.id) as comments_count
                 FROM posts p
@@ -68,7 +68,7 @@ public class PostRepository {
         return jdbcTemplate.query(sql.toString(), (rs, rowNum) -> {
             Long postId = rs.getLong("id");
             List<String> postTags = findTagsByPostId(postId);
-            return new PostResponse(
+            return new Post(
                     postId,
                     rs.getString("title"),
                     rs.getString("text"),
@@ -97,10 +97,17 @@ public class PostRepository {
         }
 
         if (tags != null && !tags.isEmpty()) {
-            for (String tag : tags) {
-                sql.append(" AND t.name = ?");
-                params.add(tag);
+            sql.append(" AND p.id IN (");
+            sql.append("SELECT pt2.post_id FROM post_tags pt2 ");
+            sql.append("JOIN tags t2 ON pt2.tag_id = t2.id ");
+            sql.append("WHERE t2.name IN (");
+            for (int i = 0; i < tags.size(); i++) {
+                sql.append(i > 0 ? ",?" : "?");
+                params.add(tags.get(i));
             }
+            sql.append(") GROUP BY pt2.post_id HAVING COUNT(DISTINCT t2.name) = ?");
+            params.add(tags.size());
+            sql.append(")");
         }
 
         return Optional.ofNullable(
@@ -108,13 +115,13 @@ public class PostRepository {
                 .orElse(0L);
     }
 
-    public PostResponse create(String title, String text, List<String> tags) {
-        String insertSql = "INSERT INTO posts (title, text, likes_count) VALUES (?, ?, 0)";
+    public Post create(Post post) {
+        String insertSql = "INSERT INTO posts (title, text) VALUES (?, ?)";
 
         PreparedStatementCreator psc = connection -> {
             PreparedStatement ps = connection.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS);
-            ps.setString(1, title);
-            ps.setString(2, text);
+            ps.setString(1, post.getTitle());
+            ps.setString(2, post.getText());
             return ps;
         };
 
@@ -122,7 +129,7 @@ public class PostRepository {
         jdbcTemplate.update(psc, keyHolder);
 
         Long generatedId = Optional.ofNullable(keyHolder.getKey()).map(Number::longValue).orElseThrow();
-
+        List<String> tags = post.getTags();
         // Добавляем теги
         if (tags != null && !tags.isEmpty()) {
             for (String tag : tags) {
@@ -135,29 +142,30 @@ public class PostRepository {
         return findById(generatedId);
     }
 
-    public PostResponse update(Long id, String title, String text, List<String> tags) {
+    public Post update(Post post) {
         String sql = "UPDATE posts SET title = ?, text = ? WHERE id = ?";
-        int updated = jdbcTemplate.update(sql, title, text, id);
+        int updated = jdbcTemplate.update(sql, post.getTitle(),
+                post.getText(), post.getId());
 
         if (updated == 0) {
             return null;
         }
 
         // Удаляем старые теги и добавляем новые
-        jdbcTemplate.update("DELETE FROM post_tags WHERE post_id = ?", id);
-
+        jdbcTemplate.update("DELETE FROM post_tags WHERE post_id = ?", post.getId());
+        List<String> tags = post.getTags();
         if (tags != null && !tags.isEmpty()) {
             for (String tag : tags) {
                 Long tagId = getOrCreateTag(tag);
                 jdbcTemplate.update("INSERT INTO post_tags (post_id, tag_id) VALUES (?, ?)",
-                        id, tagId);
+                        post.getId(), tagId);
             }
         }
 
-        return findById(id);
+        return findById(post.getId());
     }
 
-    public PostResponse findById(Long id) {
+    public Post findById(Long id) {
         String sql = """
                 SELECT p.id, p.title, p.text, p.likes_count, COUNT(DISTINCT c.id) as comments_count
                 FROM posts p
@@ -168,7 +176,7 @@ public class PostRepository {
 
         return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
             List<String> postTags = findTagsByPostId(id);
-            return new PostResponse(
+            return new Post(
                     rs.getLong("id"),
                     rs.getString("title"),
                     rs.getString("text"),

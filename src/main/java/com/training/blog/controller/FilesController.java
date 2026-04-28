@@ -1,7 +1,7 @@
 package com.training.blog.controller;
 
+import com.training.blog.exception.MissingAttachedFileException;
 import com.training.blog.service.FilesService;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Map;
+// import java.util.Map; // no longer needed
 
 @RestController
 @RequestMapping("/api/posts")
@@ -28,16 +28,11 @@ public class FilesController {
 
     @GetMapping("/{id}/image")
     public ResponseEntity<Resource> getPostImage(@PathVariable(name = "id") Long postId) {
-        Map<MediaType, ByteArrayResource> imageMap = filesService.downloadPostImage(postId);
-        if (imageMap == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Map.Entry<MediaType, ByteArrayResource> entry = imageMap.entrySet().iterator().next();
-
-        return ResponseEntity.ok()
-                .contentType(entry.getKey())
-                .body(entry.getValue());
+        return filesService.downloadPostImage(postId)
+                .map(payload -> ResponseEntity.ok()
+                        .contentType(payload.mediaType())
+                        .body((Resource) payload.resource()))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -46,6 +41,8 @@ public class FilesController {
             @RequestParam(value = "image", required = false) MultipartFile file) {
         if (file != null && !file.isEmpty()) {
             filesService.uploadPostImage(postId, file);
+        } else {
+            throw new MissingAttachedFileException();
         }
     }
 

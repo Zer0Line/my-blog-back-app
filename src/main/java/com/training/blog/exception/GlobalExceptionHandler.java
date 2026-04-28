@@ -2,6 +2,7 @@ package com.training.blog.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -23,7 +24,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
         var errors = ex.getBindingResult().getFieldErrors().stream()
                 .collect(Collectors.toMap(
-                        error -> error.getField(),
+                        FieldError::getField,
                         error -> error.getDefaultMessage() != null ? error.getDefaultMessage() : "Invalid value"
                 ));
         return ResponseEntity
@@ -36,4 +37,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
+    @ExceptionHandler(MissingAttachedFileException.class)
+    public ResponseEntity<String> handleCommentNotFoundException(MissingAttachedFileException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
 }

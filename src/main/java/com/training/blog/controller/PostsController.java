@@ -1,6 +1,6 @@
 package com.training.blog.controller;
 
-import com.training.blog.dto.Post;
+import com.training.blog.dto.PostCreateRequest;
 import com.training.blog.dto.PostResponse;
 import com.training.blog.dto.PostsPageResponse;
 import com.training.blog.dto.UpdatePostRequest;
@@ -41,7 +41,7 @@ public class PostsController {
     }
 
     @PostMapping
-    public PostResponse createPost(@Valid @RequestBody Post request) {
+    public PostResponse createPost(@Valid @RequestBody PostCreateRequest request) {
         return postService.create(request);
     }
 
@@ -53,11 +53,11 @@ public class PostsController {
     @PutMapping("/{id}")
     public PostResponse updatePost(@PathVariable(name = "id") Long id,
                                    @Valid @RequestBody UpdatePostRequest request) {
-        return postService.update(id, request.title(), request.text(), request.tags());
+        return postService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
-    public void deletePost(@PathVariable(name = "id", required = true) Long id) {
+    public void deletePost(@PathVariable(name = "id") Long id) {
         postService.delete(id);
     }
 
